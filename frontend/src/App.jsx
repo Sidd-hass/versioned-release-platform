@@ -4,7 +4,7 @@ function App() {
   const [health, setHealth] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/health")
+    fetch("/api/health")
       .then((response) => response.json())
       .then((data) => setHealth(data))
       .catch((error) => console.error("API Error:", error));

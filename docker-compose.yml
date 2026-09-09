@@ -1,0 +1,28 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: versioned-backend
+
+    environment:
+      APP_VERSION: ${APP_VERSION:-dev}
+      NODE_ENV: production
+      PORT: 3000
+
+    expose:
+      - "3000"
+
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: versioned-frontend
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      - backend
