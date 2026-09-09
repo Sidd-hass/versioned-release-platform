@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*"
 
   pull_request:
     branches:
@@ -14,11 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Get the source code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Install Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,48 +28,52 @@ jobs:
             frontend/package-lock.json
             backend/package-lock.json
 
-      # 3. Install backend dependencies
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
 
-      # 4. Install frontend dependencies
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
 
-      # 5. Build frontend
       - name: Build frontend
         working-directory: frontend
         run: npm run build
 
-      # 6. Login to Docker Hub
       - name: Login to Docker Hub
+        if: startsWith(github.ref, 'refs/tags/')
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 7. Build backend Docker image
-      - name: Build backend image
+      - name: Set release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Release version: $VERSION"
+
+      - name: Build backend release image
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           docker build \
-            -t sidd24/versioning:backend-ci \
+            -t sidd24/versioning:backend-$VERSION \
             ./backend
 
-      # 8. Build frontend Docker image
-      - name: Build frontend image
+      - name: Build frontend release image
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           docker build \
-            -t sidd24/versioning:frontend-ci \
+            -t sidd24/versioning:frontend-$VERSION \
             ./frontend
 
-      # 9. Push backend image
-      - name: Push backend image
+      - name: Push backend release image
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          docker push sidd24/versioning:backend-ci
+          docker push sidd24/versioning:backend-$VERSION
 
-      # 10. Push frontend image
-      - name: Push frontend image
+      - name: Push frontend release image
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          docker push sidd24/versioning:frontend-ci
+          docker push sidd24/versioning:frontend-$VERSION
