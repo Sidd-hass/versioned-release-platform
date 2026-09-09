@@ -14,6 +14,7 @@ const APP_VERSION = process.env.APP_VERSION || "dev";
 app.get("/", (req, res) => {
     res.json({
         application: "Versioned Release Platform",
+        environment: process.env.NODE_ENV || "development",
         version: APP_VERSION,
         status: "running"
     });
