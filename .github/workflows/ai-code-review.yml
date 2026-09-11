@@ -1,15 +1,12 @@
 name: AI Code Review
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   ai-code-review:
@@ -33,9 +30,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run AI code review
+      - name: Run AI Code Review
         working-directory: agents/code-review-agent
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: |
           python agent.py
+
+      - name: Upload AI Review Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-code-review
+          path: agents/code-review-agent/review.md
+          if-no-files-found: error
